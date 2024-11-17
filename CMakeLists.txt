@@ -10,6 +10,7 @@ project(Assignment1)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
+  std_srvs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -104,8 +105,9 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES Assignment1
-#  CATKIN_DEPENDS roscpp rospy
+   CATKIN_DEPENDS roscpp rospy std_srvs
 #  DEPENDS system_lib
+
 )
 
 ###########
@@ -133,6 +135,8 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/Assignment1_node.cpp)
+add_executable(UI src/UI.cpp)
+add_executable(Distance src/Distance.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -144,10 +148,16 @@ include_directories(
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_dependencies(UI ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(Distance ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+target_link_libraries(UI ${catkin_LIBRARIES})
+target_link_libraries(Distance ${catkin_LIBRARIES})
+
 
 #############
 ## Install ##
