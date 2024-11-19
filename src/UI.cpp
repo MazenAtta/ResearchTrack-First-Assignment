@@ -2,6 +2,12 @@
 #include "turtlesim/Pose.h"
 #include "turtlesim/Spawn.h"
 #include "geometry_msgs/Twist.h"
+#include "std_msgs/String.h"
+
+std_msgs::String turtle_name_msg;
+geometry_msgs::Twist vel_msg;
+std::string turtle_name;
+float linear, angular;
 
 // Callback for turtle1 pose
 void turtle1_Callback(const turtlesim::Pose::ConstPtr& msg) {
@@ -17,7 +23,6 @@ int main(int argc, char **argv) {
     // Initialize the ROS system and create a node handle
     ros::init(argc, argv, "UI");
     ros::NodeHandle n;
-    geometry_msgs::Twist vel_msg;
 
     // Spawn turtle2
     ros::ServiceClient spawn_client = n.serviceClient<turtlesim::Spawn>("/spawn");
@@ -39,8 +44,9 @@ int main(int argc, char **argv) {
     ros::Subscriber turtle2_sub = n.subscribe("/turtle2/pose", 10, turtle2_Callback);
     ros::Publisher turtle2_pub = n.advertise<geometry_msgs::Twist>("/turtle2/cmd_vel", 10);
 
-    std::string turtle_name;
-    float linear, angular;
+    ros::Publisher last_moving_turtle_pub = n.advertise<std_msgs::String>("/last_moving_turtle", 10);
+
+
 
     while (ros::ok()) {
         std::cout << "Select turtle (turtle1/turtle2): ";
@@ -58,6 +64,9 @@ int main(int argc, char **argv) {
 
         vel_msg.linear.x = linear;
         vel_msg.angular.z = angular;
+
+        turtle_name_msg.data = turtle_name;  // Set the name of the last moving turtle
+        last_moving_turtle_pub.publish(turtle_name_msg);  // Publish it
 
         if (turtle_name == "turtle1") {
             turtle1_pub.publish(vel_msg);
