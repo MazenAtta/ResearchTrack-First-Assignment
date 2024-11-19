@@ -15,7 +15,7 @@ geometry_msgs::Twist move_msg;
 int turtles_stop_flag = 0;
 int turtle1_boundary_stop_flag = 0;
 int turtle2_boundary_stop_flag = 0;
-
+float distance = 10;
 void turtle1Callback(const turtlesim::Pose::ConstPtr& msg) {
     turtle1_pose = *msg;
 }
@@ -42,12 +42,17 @@ int main(int argc, char **argv) {
     turtle1_boundary_stop_flag = 0;
     turtle2_boundary_stop_flag = 0;
     
-    ros::Rate loop_rate(10);  // 10 Hz
+    distance = std::sqrt(std::pow(turtle1_pose.x - turtle2_pose.x, 2) +
+                               std::pow(turtle1_pose.y - turtle2_pose.y, 2));
+
+    std_msgs::Float32 distance_msg;
+    distance_msg.data = distance;
+    distance_pub.publish(distance_msg);
 
     while (ros::ok()) {
     
     // Calculate distance between turtles
-    float distance = std::sqrt(std::pow(turtle1_pose.x - turtle2_pose.x, 2) +
+    distance = std::sqrt(std::pow(turtle1_pose.x - turtle2_pose.x, 2) +
                                std::pow(turtle1_pose.y - turtle2_pose.y, 2));
 
     std_msgs::Float32 distance_msg;
@@ -62,7 +67,7 @@ int main(int argc, char **argv) {
         stop_msg.angular.z = 0.0;
         turtle1_pub.publish(stop_msg);
         turtle2_pub.publish(stop_msg);
-        ROS_WARN("Stopping turtles: too close.");
+        ROS_WARN("Stopping turtles: too close. %f", distance);
     }
 
     else if (turtle1_pose.x < 1.0 || turtle1_pose.x > 10.0 || turtle1_pose.y < 1.0 || turtle1_pose.y > 10.0) {
@@ -91,11 +96,16 @@ int main(int argc, char **argv) {
         turtles_stop_flag = 0;
         
         move_msg.angular.z = M_PI_2;
-        ros::Duration(1.0).sleep();
-        move_msg.linear.x = 1.0;
-        ros::Duration(1.0).sleep();
+        move_msg.linear.x = 0.0;
         turtle1_pub.publish(move_msg);
         turtle2_pub.publish(move_msg);
+        ros::Duration(1.0).sleep();
+        
+        move_msg.angular.z = 0.0;
+        move_msg.linear.x = 1.0;
+        turtle1_pub.publish(move_msg);
+        turtle2_pub.publish(move_msg);
+        ros::Duration(1.0).sleep();
         ROS_WARN("Moving turtles: to avoid collision.");
 
     }
@@ -103,20 +113,23 @@ int main(int argc, char **argv) {
     {
         turtle1_boundary_stop_flag = 0;
         move_msg.angular.z = M_PI_2;
-        ros::Duration(1.0).sleep();
-        move_msg.linear.x = 1.0;
-        ros::Duration(1.0).sleep();
         turtle1_pub.publish(move_msg);
+        ros::Duration(1.0).sleep();
+
+        move_msg.linear.x = 1.0;
+        turtle1_pub.publish(move_msg);
+        ros::Duration(1.0).sleep();
         ROS_WARN("Moving turtle1: to avoid boundary.");
     }
     else if(turtle2_boundary_stop_flag == 1)
     {
         turtle2_boundary_stop_flag = 0;
-        ros::Duration(1.0).sleep();
         move_msg.angular.z = M_PI_2;
-        move_msg.linear.x = 1.0;
-        ros::Duration(1.0).sleep();
         turtle2_pub.publish(move_msg);
+        ros::Duration(1.0).sleep();
+        move_msg.linear.x = 1.0;
+        turtle2_pub.publish(move_msg);
+        ros::Duration(1.0).sleep();
         ROS_WARN("Moving turtle2: to avoid boundary.");
     }
 
