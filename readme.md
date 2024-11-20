@@ -31,7 +31,7 @@ This project implements a ROS-based solution involving two turtles in the `turtl
 1. Clone this repository into your catkin workspace's `src` directory:
    ```bash
    cd ~/catkin_ws/src
-   git clone <repository-url>
+   git clone https://github.com/MazenAtta/ResearchTrack-First-Assignment.git
    ```
 2. Build the workspace:
    ```bash
