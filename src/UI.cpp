@@ -5,23 +5,14 @@
 
 
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) 
+{
     // Initialize the ROS system and create a node handle
     ros::init(argc, argv, "UI");
     ros::NodeHandle n;
 
     // Spawn turtle2
-    ros::ServiceClient spawn_client = n.serviceClient<turtlesim::Spawn>("/spawn");
-    turtlesim::Spawn spawn_srv;
-    spawn_srv.request.x = 2.0;
-    spawn_srv.request.y = 1.0;
-    spawn_srv.request.theta = 0.0;
-    spawn_srv.request.name = "turtle2";
-    if (spawn_client.call(spawn_srv)) {
-        ROS_INFO("Spawned turtle2 at (2.0, 1.0, 0.0)");
-    } else {
-        ROS_ERROR("Failed to spawn turtle2");
-    }
+    turtleSpawner(n, "turtle2", 2.0, 1.0, 0.0);
 
     // Define publishers and subscribers for turtle1 and turtle2
     ros::Subscriber turtle1_sub = n.subscribe("/turtle1/pose", 10, turtle1_Callback);
@@ -32,36 +23,31 @@ int main(int argc, char **argv) {
 
     ros::Publisher last_moving_turtle_pub = n.advertise<std_msgs::String>("/last_moving_turtle", 10);
 
+    ros::Rate rate(10); // 10 Hz loop
 
+    while (ros::ok()) 
+    {
+        ros::spinOnce();
+        // Take user input for turtle name, linear velocity, and angular velocity
+        turtle_name = takeUserInput();
+        
 
-    while (ros::ok()) {
-        std::cout << "Select turtle (turtle1/turtle2): ";
-        std::cin >> turtle_name;
-
-        if (turtle_name != "turtle1" && turtle_name != "turtle2") {
-            std::cout << "Invalid turtle name. Try again.\n";
+        if (turtle_name == "turtle1") 
+        {
+            turtle1_pub.publish(vel_msg);
+        } 
+        else if (turtle_name == "turtle2") 
+        {
+            turtle2_pub.publish(vel_msg);
+        } 
+        else 
+        {
+            std::cout << turtle_name;
             continue;
         }
-
-        std::cout << "Enter linear velocity: ";
-        std::cin >> linear;
-        std::cout << "Enter angular velocity: ";
-        std::cin >> angular;
-
-        vel_msg.linear.x = linear;
-        vel_msg.angular.z = angular;
 
         turtle_name_msg.data = turtle_name;  // Set the name of the last moving turtle
         last_moving_turtle_pub.publish(turtle_name_msg);  // Publish it
-
-        if (turtle_name == "turtle1") {
-            turtle1_pub.publish(vel_msg);
-        } else if (turtle_name == "turtle2") {
-            turtle2_pub.publish(vel_msg);
-        } else {
-            std::cout << "Invalid turtle name. Try again.\n";
-            continue;
-        }
 
         // Send the command for 1 second
         ros::Duration(1.0).sleep();
